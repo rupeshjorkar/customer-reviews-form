@@ -8,28 +8,28 @@ class Review_Assets {
         // Enqueue Slick Slider CSS
         wp_enqueue_style(
             'slick-css', 
-            CRF_PLUGIN_URL . 'vendor/slick/slick/slick.css',
+            CRF_URL . 'vendor/slick/slick/slick.css',
             array(),
-            '1.8.1'
+            CRF_VERSION
         );
         wp_enqueue_style(
             'slick-theme-css', 
-            CRF_PLUGIN_URL . 'vendor/slick/slick/slick-theme.css',
+            CRF_URL . 'vendor/slick/slick/slick-theme.css',
             array('slick-css'),
-            '1.8.1'
+            CRF_VERSION
         );
 
         wp_enqueue_script(
             'slick-js', 
-            CRF_PLUGIN_URL . 'vendor/slick/slick/slick.min.js',
+            CRF_URL . 'vendor/slick/slick/slick.min.js',
             array('jquery'), 
-            '1.8.1', 
+            CRF_VERSION, 
             true
         );
 
         // Enqueue React scripts using WordPress-bundled wp-element
-        wp_enqueue_script('crf-review-form', CRF_PLUGIN_URL . 'assets/js/review-form.js', array('wp-element'), '1.0.0', true);
-        wp_enqueue_script('crf-review-slider', CRF_PLUGIN_URL . 'assets/js/review-slider.js', array('wp-element', 'slick-js'), '1.0.0', true);
+        wp_enqueue_script('crf-review-form', CRF_URL . 'assets/js/review-form.js', array('wp-element'), CRF_VERSION, true);
+        wp_enqueue_script('crf-review-slider', CRF_URL . 'assets/js/review-slider.js', array('wp-element', 'slick-js'), CRF_VERSION, true);
 
         // Localize scripts with data and nonces
         wp_localize_script('crf-review-form', 'crf_form_data', array(
@@ -52,9 +52,9 @@ class Review_Assets {
         if (!wp_style_is('tailwind-css', 'enqueued')) {
             wp_enqueue_style(
                 'tailwind-css', 
-                CRF_PLUGIN_URL . 'vendor/tailwind/tailwind.min.css',
+                CRF_URL . 'vendor/tailwind/tailwind.min.css',
                 array(), 
-                '2.2.19'
+                CRF_VERSION
             );
         }
     }

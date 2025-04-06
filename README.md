@@ -88,3 +88,7 @@ This plugin is licensed under the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.h
 ### 2.0
 - Google Captcha in Customer review form
 - Utilise some vendor to enhance the feature
+### 2.0.1
+- Add constant value for Enqueue scirpt
+- Add missing constant value
+- Dynamic version for Style and CSS
