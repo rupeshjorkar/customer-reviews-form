@@ -1,3 +1,4 @@
+
 .slider_with_background{   
     max-width: 100%;
     padding: 60px 20px 40px;
@@ -130,7 +131,7 @@ display:inline-block;
     line-height: 22px;
     margin: 0;
     transform: translateY(-50%);
-    background-color: #00a0fc;
+    background-color: #00a0fc !important;
     border-color: #00a0fc;
     color: #fff;
     z-index: 111;
@@ -146,4 +147,7 @@ color: #008fe2 !important;
 }
 .slider_without_background .slick-dots{
     margin-top:0px !important
+}
+.slider_without_background .User_name>span{
+    display:none
 }

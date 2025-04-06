@@ -3,15 +3,14 @@
  * Plugin Name: Customer Reviews Form
  * Plugin URI: 
  * Description: A plugin to manage and display custom reviews.
- * Version: 1.0
+ * Version: 2.0
  * Requires at least: 2.6
  * Requires PHP: 5.6
  * Author: Bible Society
- * Author URI:
+ * Author URI: 
  * License: GPLv3
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
- *
- * Text Domain: custom-reviews-form
+ * Text Domain: customer-reviews-form
  */
 
 if (!defined('ABSPATH')) {
@@ -24,24 +23,53 @@ define('CRF_PLUGIN_URL', plugin_dir_url(__FILE__));
 require_once CRF_PLUGIN_DIR . 'includes/class-review-post-type.php';
 require_once CRF_PLUGIN_DIR . 'includes/class-review-assets.php';
 require_once CRF_PLUGIN_DIR . 'includes/class-review-handler.php';
+require_once CRF_PLUGIN_DIR . 'includes/class-review-settings.php';
+
+// Initialize settings
+function crf_initialize_settings() {
+    if (!class_exists('Review_Settings')) {
+        return; // Prevent initialization if the class doesn't exist
+    }
+    $settings = new Review_Settings();
+    $settings->init();
+}
+add_action('plugins_loaded', 'crf_initialize_settings');
 
 function crf_review_form_shortcode() {
-    // echo "Rupesh is working on Short Code";
-    ob_start(); ?>
+    return '<div id="crf-review-form-container"></div>';
+    /*  ob_start(); ?>
     <div id="crf-review-form-container"></div>
-    <?php return ob_get_clean();
+    <?php return ob_get_clean(); */
 }
-add_shortcode('review_form', 'crf_review_form_shortcode');
-
+add_shortcode('customer_reviews_form', 'crf_review_form_shortcode');
+ 
 function crf_review_slider_shortcode($atts) {
-    $atts = shortcode_atts([
-        'count' => 5,
-        'class' => 'slider-one'
-    ], $atts, 'review_slider');
+    $atts = shortcode_atts(
+        [
+            'count' => 5,
+            'class' => 'slider',
+            'design' => ''  // Design attribute (home-design or book-design)
+        ],
+        $atts,
+        'customer_reviews_slider'
+    );
+    
+   // Modify class based on 'design' attribute
+    switch ($atts['design']) {
+        case 'home-design':
+            $atts['class'] = 'slider_with_background';
+            break;
+        case 'book-design':
+            $atts['class'] = 'slider_without_background';
+            break;
+    }
 
-    ob_start(); ?>
-    <div id="crf-review-slider-container" class="<?php echo esc_attr($atts['class']); ?>" data-count="<?php echo esc_attr($atts['count']); ?>"></div>
-    <?php return ob_get_clean();
+    // Return the markup for the slider
+    return sprintf(
+        '<div id="crf-review-slider-container" class="%s" data-count="%d" data-design="%s"></div>',
+        esc_attr($atts['class']),
+        intval($atts['count']),
+        esc_attr($atts['design'])
+    );
 }
-add_shortcode('review_slider', 'crf_review_slider_shortcode');
-
+add_shortcode('customer_reviews_slider', 'crf_review_slider_shortcode');

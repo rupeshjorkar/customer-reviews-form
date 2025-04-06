@@ -47,6 +47,9 @@ if (!class_exists('Review_Post_Type')) {
         public function render_review_meta_box($post) {
             $name = get_post_meta($post->ID, '_review_name', true);
             $date = get_post_meta($post->ID, '_review_date', true);
+
+            // Nonce field for verification
+            wp_nonce_field('save_review_meta_nonce_action', 'save_review_meta_nonce');
             ?>
             <p>
                 <label for="review_name">Reviewer Name:</label>
@@ -60,24 +63,46 @@ if (!class_exists('Review_Post_Type')) {
         }
 
         public function save_review_meta($post_id, $post) {
-            if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-            if (!isset($_POST['review_name']) || !isset($_POST['review_date'])) return;
-            if (!current_user_can('edit_post', $post_id)) return;
+            if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+                return;
+            }
 
-            update_post_meta($post_id, '_review_name', sanitize_text_field($_POST['review_name']));
-            update_post_meta($post_id, '_review_date', sanitize_text_field($_POST['review_date']));
+            // Verify nonce
+            if (
+                !isset($_POST['save_review_meta_nonce']) ||
+                !wp_verify_nonce(
+                    sanitize_text_field(wp_unslash($_POST['save_review_meta_nonce'])),
+                    'save_review_meta_nonce_action'
+                )
+            ) {
+                return;
+            }
+
+            // Check permissions
+            if (!current_user_can('edit_post', $post_id)) {
+                return;
+            }
+
+            // Sanitize and update
+            if (isset($_POST['review_name'])) {
+                $name = sanitize_text_field(wp_unslash($_POST['review_name']));
+                update_post_meta($post_id, '_review_name', $name);
+            }
+
+            if (isset($_POST['review_date'])) {
+                $date = sanitize_text_field(wp_unslash($_POST['review_date']));
+                update_post_meta($post_id, '_review_date', $date);
+            }
         }
 
-        // Modify the admin columns
         public function set_custom_columns($columns) {
-            unset($columns['date']); // Remove default date column
+            unset($columns['date']);
             $columns['reviewer_name'] = 'Reviewer Name';
             $columns['review_date'] = 'Review Date';
             $columns['description'] = 'Description';
             return $columns;
         }
 
-        // Populate the custom columns with data
         public function custom_column_content($column, $post_id) {
             switch ($column) {
                 case 'reviewer_name':

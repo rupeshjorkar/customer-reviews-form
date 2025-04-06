@@ -1,6 +1,7 @@
 # Ignore node_modules and other common Node.js files
 .DS_Store
 assets/.DS_Store
+vendor/.DS_Store
 # npm-debug.log
 # yarn-error.log
 # .env

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import axios from 'axios';
+import ReCAPTCHA from 'react-google-recaptcha';
 import './review-form.css';
 
 const ReviewForm = () => {
@@ -8,11 +9,27 @@ const ReviewForm = () => {
         title: '',
         description: '',
         name: '',
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
     });
 
     const [submitStatus, setSubmitStatus] = useState(null);
     const [errors, setErrors] = useState({});
+    const [captchaValue, setCaptchaValue] = useState(null);
+    const recaptchaRef = useRef(null);
+
+    useEffect(() => {
+        // console.log('WordPress data available:', {
+        //     ajax_url: window.crf_form_data?.ajax_url || 'undefined',
+        //     nonce: window.crf_form_data?.nonce || 'undefined'
+        // });
+        
+        // Check if the AJAX URL is responding
+        if (window.crf_form_data?.ajax_url) {
+            fetch(window.crf_form_data.ajax_url)
+                .then(response => console.log('AJAX endpoint test:', response.status))
+                .catch(error => console.error('AJAX endpoint test failed:', error));
+        }
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -25,9 +42,25 @@ const ReviewForm = () => {
         if (!formData.description.trim()) newErrors.description = 'Description is required';
         if (!formData.name.trim()) newErrors.name = 'Name is required';
         if (!formData.date) newErrors.date = 'Date is required';
+        if (!captchaValue) newErrors.captcha = 'Please complete the reCAPTCHA';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
+    };
+
+    const resetForm = () => {
+        setFormData({ 
+            title: '', 
+            description: '', 
+            name: '', 
+            date: new Date().toISOString().split('T')[0] 
+        });
+        setCaptchaValue(null);
+        
+        // Make sure to reset reCAPTCHA
+        if (recaptchaRef.current) {
+            recaptchaRef.current.reset();
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -42,19 +75,69 @@ const ReviewForm = () => {
             formDataToSend.append('description', formData.description);
             formDataToSend.append('name', formData.name);
             formDataToSend.append('date', formData.date);
+            formDataToSend.append('captcha', captchaValue);
 
-            const response = await axios.post(window.crf_form_data.ajax_url, formDataToSend);
-
-            if (response.data.success) {
+            console.log('Attempting to submit to:', window.crf_form_data.ajax_url);
+            console.log('Sending form data:', Object.fromEntries(formDataToSend));
+            
+            // Set a longer timeout and add headers
+            const response = await axios.post(
+                window.crf_form_data.ajax_url, 
+                formDataToSend,
+                {
+                    timeout: 10000, // 10 seconds timeout
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    }
+                }
+            );
+            
+            console.log('Response received:', response);
+            
+            if (response.data && response.data.success) {
                 setSubmitStatus({ type: 'success', message: 'Review submitted successfully!' });
-                setFormData({ title: '', description: '', name: '', date: new Date().toISOString().split('T')[0] });
+                resetForm(); 
             } else {
-                setSubmitStatus({ type: 'error', message: response.data.data || 'Submission failed' });
+                const errorMessage = response.data && response.data.data 
+                    ? response.data.data 
+                    : 'Submission failed: Server did not return success status';
+                console.error('Error details:', response.data);
+                setSubmitStatus({ type: 'error', message: errorMessage });
+                
+                if (recaptchaRef.current) {
+                    recaptchaRef.current.reset();
+                    setCaptchaValue(null);
+                }
             }
         } catch (error) {
-            setSubmitStatus({ type: 'error', message: 'An error occurred' });
+            console.error('Request failed:', error);
+            
+            let errorMessage = 'Network error occurred';
+            
+            if (error.response) {
+                
+                errorMessage = `Server error: ${error.response.status} - ${error.response.statusText}`;
+                console.error('Response data:', error.response.data);
+            } else if (error.request) {
+                errorMessage = 'No response received from server';
+                console.error('Request details:', error.request);
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+            
+            setSubmitStatus({ type: 'error', message: errorMessage });
+            
+            // Reset the reCAPTCHA even on error
+            if (recaptchaRef.current) {
+                recaptchaRef.current.reset();
+                setCaptchaValue(null);
+            }
         }
     };
+
+    // Check if reCAPTCHA site key is available
+    const recaptchaSiteKey = window.crf_form_data?.recaptcha_site_key || '';
+    const showRecaptcha = recaptchaSiteKey !== '';
 
     return (
         <div className="max-w-lg mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
@@ -117,9 +200,26 @@ const ReviewForm = () => {
                     {errors.date && <span className="text-red-500 text-sm">{errors.date}</span>}
                 </div>
 
+                {/* Google reCAPTCHA */}
+                {showRecaptcha ? (
+                    <div className="Recaptcha">
+                        <ReCAPTCHA
+                            ref={recaptchaRef}
+                            sitekey={recaptchaSiteKey}
+                            onChange={(value) => setCaptchaValue(value)}
+                        />
+                        {errors.captcha && <span className="text-red-500 text-sm">{errors.captcha}</span>}
+                    </div>
+                ) : (
+                    <div className="text-red-500 text-sm">
+                        reCAPTCHA site key is not configured. Please configure it in the plugin settings.
+                    </div>
+                )}
+
                 <button
                     type="submit"
                     className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition duration-200"
+                    disabled={!showRecaptcha}
                 >
                     Submit Review
                 </button>
@@ -128,7 +228,6 @@ const ReviewForm = () => {
     );
 };
 
-// Render into a WordPress shortcode container
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('crf-review-form-container');
     if (container) {

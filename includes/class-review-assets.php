@@ -8,28 +8,20 @@ class Review_Assets {
         // Enqueue Slick Slider CSS
         wp_enqueue_style(
             'slick-css', 
-            'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css',
+            CRF_PLUGIN_URL . 'vendor/slick/slick/slick.css',
             array(),
             '1.8.1'
         );
         wp_enqueue_style(
             'slick-theme-css', 
-            'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css',
+            CRF_PLUGIN_URL . 'vendor/slick/slick/slick-theme.css',
             array('slick-css'),
             '1.8.1'
         );
 
-        // Enqueue jQuery and Slick Slider JS
-        wp_enqueue_script(
-            'jquery', 
-            'https://code.jquery.com/jquery-3.6.0.min.js', 
-            array(), 
-            '3.6.0', 
-            true
-        );
         wp_enqueue_script(
             'slick-js', 
-            'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js', 
+            CRF_PLUGIN_URL . 'vendor/slick/slick/slick.min.js',
             array('jquery'), 
             '1.8.1', 
             true
@@ -60,7 +52,7 @@ class Review_Assets {
         if (!wp_style_is('tailwind-css', 'enqueued')) {
             wp_enqueue_style(
                 'tailwind-css', 
-                'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css',
+                CRF_PLUGIN_URL . 'vendor/tailwind/tailwind.min.css',
                 array(), 
                 '2.2.19'
             );

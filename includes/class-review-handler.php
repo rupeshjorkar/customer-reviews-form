@@ -1,4 +1,5 @@
 <?php
+
 class Review_Handler {
     public function __construct() {
         add_action('wp_ajax_submit_review', array($this, 'handle_review_submission'));
@@ -8,26 +9,30 @@ class Review_Handler {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
     }
 
-
     // Handle the AJAX form submission
     public function handle_review_submission() {
-        error_log('AJAX request received.');
-
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'crf_review_nonce')) {
-            error_log('Nonce verification failed.');
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'crf_review_nonce')) {
             wp_send_json_error('Security check failed', 403);
         }
 
-        error_log('Nonce verified successfully.');
+        // Verify reCAPTCHA
+        if (isset($_POST['captcha'])) {
+            $captcha_response = sanitize_text_field(wp_unslash($_POST['captcha']));
+            
+            if (!Review_Settings::verify_recaptcha($captcha_response)) {
+                wp_send_json_error('reCAPTCHA verification failed');
+            }
+        } else {
+            wp_send_json_error('reCAPTCHA response is missing');
+        }
 
         // Sanitize and validate input
-        $title       = isset($_POST['title']) ? sanitize_text_field($_POST['title']) : '';
-        $description = isset($_POST['description']) ? sanitize_textarea_field($_POST['description']) : '';
-        $name        = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-        $date        = isset($_POST['date']) ? sanitize_text_field($_POST['date']) : '';
+        $title       = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
+        $description = isset($_POST['description']) ? sanitize_textarea_field(wp_unslash($_POST['description'])) : '';
+        $name        = isset($_POST['name']) ? sanitize_text_field(wp_unslash($_POST['name'])) : '';
+        $date        = isset($_POST['date']) ? sanitize_text_field(wp_unslash($_POST['date'])) : '';
 
         if (empty($title) || empty($description) || empty($name) || empty($date)) {
-            error_log('Missing required fields.');
             wp_send_json_error('All fields are required');
         }
 
@@ -42,17 +47,21 @@ class Review_Handler {
         if ($post_id) {
             update_post_meta($post_id, '_review_name', $name);
             update_post_meta($post_id, '_review_date', $date);
-            error_log('Review submitted successfully.');
             wp_send_json_success('Review submitted successfully');
         } else {
-            error_log('Error inserting post.');
             wp_send_json_error('Error submitting review');
         }
     }
 
     // Fetch published reviews
     public function get_published_reviews() {
-        $count = isset($_GET['count']) ? intval($_GET['count']) : 5;
+        // Add nonce verification
+        if (!isset($_GET['review_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['review_nonce'])), 'crf_review_nonce')) {
+            // Default to 5 if nonce verification fails
+            $count = 5;
+        } else {
+            $count = isset($_GET['count']) ? intval($_GET['count']) : 5;
+        }
 
         $args = [
             'post_type'      => 'review',
@@ -99,13 +108,28 @@ class Review_Handler {
             true
         );
 
+        // Register Google reCAPTCHA script
+        wp_register_script(
+            'google-recaptcha',
+            'https://www.google.com/recaptcha/api.js',
+            array(),
+            'v2',
+            true
+        );
+        wp_enqueue_script('google-recaptcha');
+
+        // Create a single nonce for both scripts
+        $nonce = wp_create_nonce('crf_review_nonce');
+        
         wp_localize_script('crf-review-form', 'crf_form_data', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('crf_review_nonce'),
+            'nonce' => $nonce,
+            'recaptcha_site_key' => Review_Settings::get_site_key(),
         ));
 
         wp_localize_script('crf-review-slider', 'crf_review_data', array(
-            'ajax_url' => admin_url('admin-ajax.php')
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => $nonce  // Add nonce to the review slider data
         ));
     }
 }
