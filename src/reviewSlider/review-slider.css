@@ -1,4 +1,3 @@
-
 .slider_with_background{   
     max-width: 100%;
     padding: 60px 20px 40px;
@@ -108,15 +107,16 @@ display: none;
 .slider_without_background .Description span{
 display:inline-block;
 }
+
 .slick-prev:before {
-    font-family: "Porto";
-    content: "\e819";
-    opacity:1;
-    font-size:16px
+    font-family: "FontAwesome";
+    content: "\f104";
+    opacity: 1;
+    font-size: 16px;
 }
 .slick-next:before {
-    font-family: "Porto";
-    content: "\e81a";
+    font-family: "FontAwesome";
+    content: "\f054";
     opacity:1;
     font-size:16px
 }
@@ -150,4 +150,21 @@ color: #008fe2 !important;
 }
 .slider_without_background .User_name>span{
     display:none
+}
+
+.slick-dots li button:before {
+    font-size: 6px;
+    line-height: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 9px;
+    background: #00a2f8;
+    height: 9px;
+    content: '.' !important;
+    text-align: center;
+    opacity: .25;
+    color: #000;
+    display: inline-block;
+    border-radius: 100px;
 }

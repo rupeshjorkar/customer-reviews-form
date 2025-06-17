@@ -92,3 +92,5 @@ This plugin is licensed under the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.h
 - Add constant value for Enqueue scirpt
 - Add missing constant value
 - Dynamic version for Style and CSS
+### 2.0.2
+- Imporved the recaptcha funtionality

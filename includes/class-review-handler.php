@@ -114,7 +114,7 @@ class Review_Handler {
             'https://www.google.com/recaptcha/api.js',
             array(),
             'v2',
-            true
+            false
         );
         wp_enqueue_script('google-recaptcha');
 

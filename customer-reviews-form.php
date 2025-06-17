@@ -3,7 +3,7 @@
  * Plugin Name: Customer Reviews Form
  * Plugin URI: 
  * Description: A plugin to manage and display custom reviews.
- * Version: 2.0.1
+ * Version: 2.0.2
  * Requires at least: 2.6
  * Requires PHP: 5.6
  * Author: Bible Society
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 
 // define('CRF_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-define( 'CRF_VERSION', '2.0' );
+define( 'CRF_VERSION', '2.0.2' );
 define( 'CRF_URL', plugin_dir_url( __FILE__ ) );
 define( 'CRF_DIR', plugin_dir_path(__FILE__) );
 define( 'CRF_PATH', dirname( __FILE__ ) );
